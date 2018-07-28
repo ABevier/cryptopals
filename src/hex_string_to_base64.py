@@ -1,53 +1,51 @@
+from utils import to_hex_list
+
 # Set 1 - problem 1
 
-hex_to_int_map = {
-    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6':6, '7': 7, '8': 8,
-    '9': 9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f':15
-}
-
 base64_chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-
 mask = 0b111111
-
-#Two chars = 1 hex digit
-#4 bytes are represented per char
-#This dies if hex digits are odd - but that's fine
-def extract_hex_digit(list, index):
-    if(index >= len(list)):
-        return 0
-
-    high = hex_to_int_map[list[index]]
-    low = hex_to_int_map[list[index+1]]
-    return (high << 4) + low
 
 def to_base64_char(source_octets, offset, needs_pad=False):
     #grab 6 bytes from our source octets
     index = (source_octets >> (offset * 6)) & mask
-    if index == 0 and needs_pad:
-        return '='
-    else:
-        return base64_chars[index]
+    return base64_chars[index]
 
 #Base64 takes 3 bytes in and converts to 4 bytes
 #It takes 2 hex chars per byte so we need input in 
 #multiples of 6.
-def hex_string_to_base64(input):
-    result = ''
-    for i in range(0, len(input), 6):
-        needs_pad = i + 6 > len(input)
+def hex_string_to_base64(hex_str):
+    base64_str = ''
 
-        #Grab 3 octects and add them all up
-        source_octets = (extract_hex_digit(input, i) << 16) + \
-                        (extract_hex_digit(input, i+2) << 8) + \
-                        extract_hex_digit(input, i+4)
+    hex_list = to_hex_list(hex_str)
+
+    for idx in range(0, len(hex_list), 3):
+        print(idx)
+        i = hex_list[idx]
+
+        if idx + 1 < len(hex_list):
+            j = hex_list[idx + 1]
+            needs_pad_1 = False
+        else:
+            j = 0
+            needs_pad_1 = True
+
+        if idx + 2 < len(hex_list):
+            k = hex_list[idx + 2]
+            needs_pad_2 = False
+        else:
+            k = 0
+            needs_pad_2 = True
+
+        #grab 3 bytes at a time and add them all up
+        source_octets = (i << 16) + (j << 8) + k
 
         #Convert the 3 octets to four base64 chars
-        result += to_base64_char(source_octets, 3) + \
-                to_base64_char(source_octets, 2) + \
-                to_base64_char(source_octets, 1, needs_pad) + \
-                to_base64_char(source_octets, 0, needs_pad)
+        base64_str += to_base64_char(source_octets, 3) + \
+                      to_base64_char(source_octets, 2) + \
+                      ('=' if needs_pad_1 else to_base64_char(source_octets, 1)) + \
+                      ('=' if needs_pad_2 else to_base64_char(source_octets, 0))
 
-    return result
+    return base64_str
 
     
 if __name__ == '__main__':
